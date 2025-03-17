@@ -145,7 +145,7 @@ except Exception as e:
 LOG_PATH= './logs'
 LOGFILE_CONTAINER = './logs/logfile_container_frontend.log'
 os.makedirs(os.path.dirname(LOGFILE_CONTAINER), exist_ok=True)
-logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [START] started logging in {LOGFILE_CONTAINER}')
 
 def load_log_file(req_container_name):
@@ -441,10 +441,11 @@ def gr_load_check(selected_model_id,selected_model_architectures,selected_model_
         return f'Selected model has no architecture', gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     
-    print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [gr_load_check] selected_model_architectures.lower() {selected_model_architectures.lower()}')
-    logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [gr_load_check] selected_model_architectures.lower() {selected_model_architectures.lower()}')
-    selected_model_architectures_lower = selected_model_architectures.lower()
-    if selected_model_architectures_lower not in vllm_supported_architectures:
+    
+    print(f' **************** [gr_load_check] selected_model_architectures.lower() : {selected_model_architectures.lower()}')
+    logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** [gr_load_check] selected_model_architectures.lower() : {selected_model_architectures.lower()}')
+
+    if selected_model_architectures.lower() not in vllm_supported_architectures:
         if selected_model_transformers != 'True':   
             return f'Selected model architecture is not supported by vLLM but transformers are available (you may try to load the model in gradio Interface)', gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
         else:
