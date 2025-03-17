@@ -986,7 +986,7 @@ def download_info(req_model_size, progress=gr.Progress()):
         download_info_current_model_bytes_recv = download_info_current_model_bytes_recv + download_speed
         download_info_prev_bytes_recv = bytes_recv
         progress_percent = (i + 1) / est_download_time_sec
-        progress(progress_percent, desc=f"Downloading ... ({download_info_current_model_bytes_recv}/{req_model_size} {int(progress_percent * 100)}%) ({download_speed_mbit_s:.2f} MBit/s)")
+        progress(progress_percent, desc=f"Downloading ... {download_speed_mbit_s:.2f} MBit/s {download_info_current_model_bytes_recv}/{req_model_size} {int(progress_percent * 100)}%")
 
         time.sleep(1)
     yield f"Progress: 100%\nFiniiiiiiiish!"
@@ -1434,11 +1434,11 @@ def create_app():
                             lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
                         )
                         
-                        stop_btn = gr.Button("Stop", scale=0)
+                        start_btn = gr.Button("Start", scale=0)
                         delete_btn = gr.Button("Delete", scale=0, variant="stop")
 
-                        stop_btn.click(
-                            docker_api_stop,
+                        start_btn.click(
+                            docker_api_start,
                             inputs=[container_id],
                             outputs=[container_state]
                         ).then(
