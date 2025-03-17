@@ -960,8 +960,10 @@ def download_info(req_model_size, progress=gr.Progress()):
 
 
 
+    calc_mean = lambda data: np.mean([x for x in data if (np.percentile(data, 25) - 1.5 * (np.percentile(data, 75) - np.percentile(data, 25))) <= x <= (np.percentile(data, 75) + 1.5 * (np.percentile(data, 75) - np.percentile(data, 25)))]) if data else 0
 
-    avg_dl_speed_val = lambda avg_dl_speed: np.mean([x for x in avg_dl_speed if (np.percentile(avg_dl_speed, 25) - 1.5 * (np.percentile(avg_dl_speed, 75) - np.percentile(avg_dl_speed, 25))) <= x <= (np.percentile(avg_dl_speed, 75) + 1.5 * (np.percentile(avg_dl_speed, 75) - np.percentile(avg_dl_speed, 25)))]) if avg_dl_speed else 0
+
+    avg_dl_speed_val = calc_mean(avg_dl_speed)
         
     
     logging.info(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')
