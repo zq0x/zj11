@@ -145,12 +145,12 @@ except Exception as e:
 LOG_PATH= './logs'
 LOGFILE_CONTAINER = './logs/logfile_container_frontend.log'
 os.makedirs(os.path.dirname(LOGFILE_CONTAINER), exist_ok=True)
-logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [START] started logging in {LOGFILE_CONTAINER}')
+logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.INFO, format='[%(asctime)s - %(name)s - %(levelname)s - %(message)s]')
+logging.info(f' [START] started logging in {LOGFILE_CONTAINER}')
 
 def load_log_file(req_container_name):
     print(f' **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_name}')
-    logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_name}')
+    logging.info(f' **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_name}')
     try:
         with open(f'{LOG_PATH}/logfile_{req_container_name}.log', 'r') as file:
             lines = file.readlines()
@@ -441,9 +441,8 @@ def gr_load_check(selected_model_id,selected_model_architectures,selected_model_
         return f'Selected model has no architecture', gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     
-    
-    print(f' **************** [gr_load_check] selected_model_architectures.lower() : {selected_model_architectures.lower()}')
-    logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** [gr_load_check] selected_model_architectures.lower() : {selected_model_architectures.lower()}')
+    print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** [gr_load_check] selected_model_architectures.lower() : {selected_model_architectures.lower()}')
+    logging.info(f' **************** [gr_load_check] selected_model_architectures.lower() : {selected_model_architectures.lower()}')
 
     if selected_model_architectures.lower() not in vllm_supported_architectures:
         if selected_model_transformers != 'True':   
@@ -700,21 +699,21 @@ def vllm_api(
     try:
 
         FALLBACK_VLLM_API = {}
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] req_type: {req_type}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] model: {model}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] pipeline_tag: {pipeline_tag}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] max_model_len: {max_model_len}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] tensor_parallel_size: {tensor_parallel_size}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] gpu_memory_utilization: {gpu_memory_utilization}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] top_p: {top_p}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] temperature: {temperature}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] max_tokens: {max_tokens}')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] prompt_in: {prompt_in}')
+        logging.info(f' [vllm_api] req_type: {req_type}')
+        logging.info(f' [vllm_api] model: {model}')
+        logging.info(f' [vllm_api] pipeline_tag: {pipeline_tag}')
+        logging.info(f' [vllm_api] max_model_len: {max_model_len}')
+        logging.info(f' [vllm_api] tensor_parallel_size: {tensor_parallel_size}')
+        logging.info(f' [vllm_api] gpu_memory_utilization: {gpu_memory_utilization}')
+        logging.info(f' [vllm_api] top_p: {top_p}')
+        logging.info(f' [vllm_api] temperature: {temperature}')
+        logging.info(f' [vllm_api] max_tokens: {max_tokens}')
+        logging.info(f' [vllm_api] prompt_in: {prompt_in}')
 
         if req_type == "load":
             response = "if you see this it didnt work :/"  
             
-            logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] gpu_memory_utilization: {gpu_memory_utilization}')
+            logging.info(f' [vllm_api] [{req_type}] gpu_memory_utilization: {gpu_memory_utilization}')
             response = requests.post(VLLM_URL, json={
                 "req_type":"load",
                 "max_model_len":int(max_model_len),
@@ -723,13 +722,13 @@ def vllm_api(
                 "model":str(model)
             })
             if response.status_code == 200:
-                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] status_code: {response.status_code}') 
+                logging.info(f' [vllm_api] [{req_type}] status_code: {response.status_code}') 
                 response_json = response.json()
-                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response_json: {response_json}') 
+                logging.info(f' [vllm_api] [{req_type}] response_json: {response_json}') 
                 response_json["result_data"] = response_json["result_data"]
                 return response_json["result_data"]                
             else:
-                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response: {response}')
+                logging.info(f' [vllm_api] [{req_type}] response: {response}')
                 FALLBACK_VLLM_API["result_data"] = f'{response}'
                 return FALLBACK_VLLM_API
     
@@ -737,7 +736,7 @@ def vllm_api(
 
         if req_type == "generate":
             response = "if you see this it didnt work :/"  
-            logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] temperature: {temperature}')
+            logging.info(f' [vllm_api] [{req_type}] temperature: {temperature}')
             response = requests.post(VLLM_URL, json={
                 "req_type":"generate",
                 "prompt":str(prompt_in),
@@ -746,12 +745,12 @@ def vllm_api(
                 "max_tokens":int(max_tokens)
             })
             if response.status_code == 200:
-                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] status_code: {response.status_code}') 
+                logging.info(f' [vllm_api] [{req_type}] status_code: {response.status_code}') 
                 response_json = response.json()
-                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response_json: {response_json}') 
+                logging.info(f' [vllm_api] [{req_type}] response_json: {response_json}') 
                 return response_json["result_data"]                
             else:
-                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] response: {response}')
+                logging.info(f' [vllm_api] response: {response}')
                 FALLBACK_VLLM_API["result_data"] = f'{response}'
                 return FALLBACK_VLLM_API
     
