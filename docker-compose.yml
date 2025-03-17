@@ -33,7 +33,7 @@ services:
   vllm:
     build:
       context: ./vllm
-    image: xoo4foo/zvllm16:latest
+    image: xoo4foo/zvllm15:latest
     runtime: nvidia
     deploy:
       resources:
@@ -46,8 +46,7 @@ services:
       - "1370:1370"
     container_name: container_vllm
     volumes:
-      - ./vllm:/usr/src/app
-      - ../logs:/usr/src/app/logs
+      - ../logs:/var/log
       - /models:/models
     shm_size: 8gb
     environment:
