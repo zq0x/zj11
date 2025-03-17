@@ -10,6 +10,7 @@ import ast
 import time
 from datetime import datetime
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
+import numpy as np
 import pandas as pd
 import huggingface_hub
 from huggingface_hub import snapshot_download
@@ -941,7 +942,7 @@ def download_info(req_model_size, progress=gr.Progress()):
     
     avg_dl_speed_val = 0
     avg_dl_speed = []
-    for i in range(0,4):
+    for i in range(0,5):
         net_io = psutil.net_io_counters()
         bytes_recv = net_io.bytes_recv
         download_speed = bytes_recv - download_info_prev_bytes_recv
@@ -957,7 +958,12 @@ def download_info(req_model_size, progress=gr.Progress()):
     logging.info(f' **************** [download_info] append: {download_speed} append avg_dl_speed: {avg_dl_speed} len(avg_dl_speed): {len(avg_dl_speed)} avg_dl_speed_val: {avg_dl_speed_val}')
     print(f' **************** [download_info] append: {download_speed} append avg_dl_speed: {avg_dl_speed} len(avg_dl_speed): {len(avg_dl_speed)} avg_dl_speed_val: {avg_dl_speed_val}')  
 
-    avg_dl_speed_val = sum(avg_dl_speed)/len(avg_dl_speed)
+
+
+
+    avg_dl_speed_val = lambda avg_dl_speed: np.mean([x for x in avg_dl_speed if (np.percentile(avg_dl_speed, 25) - 1.5 * (np.percentile(avg_dl_speed, 75) - np.percentile(avg_dl_speed, 25))) <= x <= (np.percentile(avg_dl_speed, 75) + 1.5 * (np.percentile(avg_dl_speed, 75) - np.percentile(avg_dl_speed, 25)))]) if avg_dl_speed else 0
+        
+    
     logging.info(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')
     print(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')    
 
