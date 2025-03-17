@@ -436,6 +436,47 @@ def get_additional_info(selected_id):
 def gr_load_check(selected_model_id,selected_model_architectures,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_gated):
     
     global vllm_supported_architectures
+    
+    req_model_storage = "/models"
+    req_model_path = f'{req_model_storage}/{selected_model_id}'
+    
+    print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** [gr_load_check] searching {selected_model_id} in {req_model_storage} (req_model_path: {req_model_path}) ...')
+    logging.info(f' **************** [gr_load_check] searching {selected_model_id} in {req_model_storage} (req_model_path: {req_model_path})...')
+    
+
+
+    models_found = []
+    try:                   
+        if os.path.isdir(req_model_storage):
+            print(f' **************** found model storage path! {req_model_storage}')
+            print(f' **************** getting folder elements ...')       
+            logging.info(f' **************** found model storage path! {req_model_storage}')
+            logging.info(f' **************** getting folder elements ...')                        
+            for m_entry in os.listdir(req_model_storage):
+                m_path = os.path.join(req_model_storage, m_entry)
+                if os.path.isdir(m_path):
+                    for item_sub in os.listdir(m_path):
+                        sub_item_path = os.path.join(m_path, item_sub)
+                        models_found.append(sub_item_path)        
+            print(f' **************** found models ({len(models_found)}): {models_found}')
+            logging.info(f' **************** found models ({len(models_found)}): {models_found}')
+        else:
+            print(f' **************** found models ({len(models_found)}): {models_found}')
+            logging.info(f' **************** ERR model path not found! {req_model_storage}')
+    except Exception as e:
+        logging.info(f' **************** ERR getting models in {req_model_storage}: {e}')
+
+    
+    logging.info(f' **************** does requested model path match downloaded?')
+    model_path = selected_model_id
+    if req_model_path in models_found:
+        print(f' **************** FOUND MODELS ALREADY!!! {selected_model_id} ist in {models_found}')
+        model_path = req_model_path
+        return f'Model already downloaded!', gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+    else:
+        print(f' **************** NUH UH DIDNT FIND MODEL YET!! {selected_model_id} ist NAWT in {models_found}')
+    
+    
         
     if selected_model_architectures == '':
         return f'Selected model has no architecture', gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
@@ -899,13 +940,15 @@ def download_info(req_model_size, progress=gr.Progress()):
         download_speed = bytes_recv - download_info_prev_bytes_recv
         download_info_prev_bytes_recv = bytes_recv
         avg_dl_speed.append(download_speed)
+        logging.info(f' **************** [download_info] append: {download_speed} append avg_dl_speed: {avg_dl_speed}')
+        print(f' **************** [download_info] append: {download_speed} avg_dl_speed: {avg_dl_speed}')  
         time.sleep(1)
     
     avg_dl_speed_val = sum(avg_dl_speed)/len(avg_dl_speed)
     logging.info(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')
     print(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')    
 
-    est_download_time_sec = int(req_model_size/avg_dl_speed_val)
+    est_download_time_sec = int(int(req_model_size)/avg_dl_speed_val)
     logging.info(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
     print(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
 
