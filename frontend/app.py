@@ -933,6 +933,7 @@ def download_info(req_model_size, progress=gr.Progress()):
     progress(0.01, desc="Calculating Download Time ...")
     time.sleep(1)
     
+    avg_dl_speed_val = 0
     avg_dl_speed = []
     for i in range(0,3):
         net_io = psutil.net_io_counters()
@@ -940,15 +941,23 @@ def download_info(req_model_size, progress=gr.Progress()):
         download_speed = bytes_recv - download_info_prev_bytes_recv
         download_info_prev_bytes_recv = bytes_recv
         avg_dl_speed.append(download_speed)
-        logging.info(f' **************** [download_info] append: {download_speed} append avg_dl_speed: {avg_dl_speed}')
-        print(f' **************** [download_info] append: {download_speed} avg_dl_speed: {avg_dl_speed}')  
+        avg_dl_speed_val = sum(avg_dl_speed)/len(avg_dl_speed)
+        logging.info(f' **************** [download_info] append: {download_speed} append avg_dl_speed: {avg_dl_speed} len(avg_dl_speed): {len(avg_dl_speed)} avg_dl_speed_val: {avg_dl_speed_val}')
+        print(f' **************** [download_info] append: {download_speed} append avg_dl_speed: {avg_dl_speed} len(avg_dl_speed): {len(avg_dl_speed)} avg_dl_speed_val: {avg_dl_speed_val}')  
         time.sleep(1)
     
+    logging.info(f' **************** [download_info] append: {download_speed} append avg_dl_speed: {avg_dl_speed} len(avg_dl_speed): {len(avg_dl_speed)} avg_dl_speed_val: {avg_dl_speed_val}')
+    print(f' **************** [download_info] append: {download_speed} append avg_dl_speed: {avg_dl_speed} len(avg_dl_speed): {len(avg_dl_speed)} avg_dl_speed_val: {avg_dl_speed_val}')  
+
     avg_dl_speed_val = sum(avg_dl_speed)/len(avg_dl_speed)
     logging.info(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')
     print(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')    
 
-    est_download_time_sec = int(int(req_model_size)/avg_dl_speed_val)
+    est_download_time_sec = int(req_model_size)/int(avg_dl_speed_val)
+    logging.info(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
+    print(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
+
+    est_download_time_sec = int(est_download_time_sec)
     logging.info(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
     print(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
 
