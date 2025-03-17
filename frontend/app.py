@@ -320,7 +320,7 @@ def calculate_model_size(json_info): # to fix
             
             total_size_in_bytes += (encoder_size + decoder_size)
 
-        return total_size_in_bytes
+        return total_size_in_bytes * 2
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
         return 0
@@ -423,6 +423,8 @@ def get_additional_info(selected_id):
                 pass                       
             
             if res_model_data["size"] == 0:
+                print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** [get_additional_info] res_model_data["size"] == 0 ...')
+                logging.info(f' **************** [get_additional_info] res_model_data["size"] == 0...')
                 try:
                     res_model_data["size"] = calculate_model_size(res_model_data["config_data"]) 
                 except Exception as get_config_json_err:
