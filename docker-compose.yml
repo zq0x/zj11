@@ -33,7 +33,7 @@ services:
   vllm:
     build:
       context: ./vllm
-    image: xoo4foo/zvllm15:latest
+    image: xoo4foo/zvllm17:latest
     runtime: nvidia
     deploy:
       resources:

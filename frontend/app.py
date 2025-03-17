@@ -881,6 +881,42 @@ def predict_with_my_model(*params):
     result = f"Processed values: {req_params.param1}, {req_params.param2}, {req_params.quantity}, {req_params.animal}, {req_params.countries}, {req_params.place}, {req_params.activity_list}, {req_params.morning}, {req_params.param0}, {req_params.param0}, {req_params.param0}, {req_params.param0}"
     return result
 
+
+
+
+download_info_prev_bytes_recv = 0    
+def download_info(req_model_size, progress=gr.Progress()):
+    global download_info_prev_bytes_recv
+    progress(0, desc="Initializing Download ...")
+    time.sleep(1)
+    progress(0.01, desc="Calculating Download Time ...")
+    time.sleep(1)
+    
+    avg_dl_speed = []
+    for i in range(0,3):
+        net_io = psutil.net_io_counters()
+        bytes_recv = net_io.bytes_recv
+        download_speed = bytes_recv - download_info_prev_bytes_recv
+        download_info_prev_bytes_recv = bytes_recv
+        avg_dl_speed.append(download_speed)
+        time.sleep(1)
+    
+    avg_dl_speed_val = sum(avg_dl_speed)/len(avg_dl_speed)
+    logging.info(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')
+    print(f' **************** [download_info] avg_dl_speed_val: {avg_dl_speed_val}')    
+
+    est_download_time_sec = int(req_model_size/avg_dl_speed_val)
+    logging.info(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
+    print(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
+
+
+    for i in range(0,est_download_time_sec):        
+        progress_percent = (i + 1) / est_download_time_sec
+        progress(progress_percent, desc=f"Downloading ... ({int(progress_percent * 100)}%)")
+
+        time.sleep(1)
+    yield f"Progress: 100%\nFiniiiiiiiish!"
+
 def slowly_reverse(word, progress=gr.Progress()):
     progress(0, desc="Starting")
     time.sleep(10)
@@ -954,6 +990,7 @@ def create_app():
         with gr.Row(visible=False) as column_model_actions:
             with gr.Column(scale=3):
                 output = gr.Textbox(label="Output", show_label=True, visible=True) 
+                download_info_output = gr.Textbox(label="Download Info Output", show_label=True, visible=True) 
             with gr.Column(scale=1):
                 inp.submit(search_models, inputs=inp, outputs=[model_dropdown]).then(lambda: gr.update(visible=True), None, model_dropdown)
                 
@@ -961,8 +998,14 @@ def create_app():
 
                 btn_dl = gr.Button("Download", visible=True)
                             
-                
-                
+
+                download_info_btn = gr.Button("Download Info")
+                download_info_btn.click(
+                    fn=download_info,
+                    inputs=selected_model_size,
+                    outputs=download_info_output
+                )
+                    
                 btn = gr.Button("input_components -> predict_with_my_model")
                 btn_vllm_running = gr.Button("vllm_input_components -> predict_with_my_model")
                 # vllm_engine_arguments_show = gr.Button("GENERATE NEW VLLM", variant="primary")
@@ -1156,7 +1199,7 @@ def create_app():
                 fn=slowly_reverse,
                 inputs=reverse_input,
                 outputs=reverse_output
-        )
+            )
         # load_btn.click(lambda model, pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in: vllm_api("load", model, pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in), inputs=[model_dropdown, selected_model_pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in], outputs=prompt_out)
             
         # prompt_btn.click(lambda model, pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in: vllm_api("generate", model, pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in), inputs=[model_dropdown, selected_model_pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in], outputs=prompt_out)
