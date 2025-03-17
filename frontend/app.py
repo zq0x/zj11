@@ -433,7 +433,7 @@ def get_additional_info(selected_id):
             print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
             return res_model_data["hf_data"], res_model_data["config_data"], res_model_data["model_id"], res_model_data["size"], res_model_data["gated"]
 
-def gr_load_check(selected_model_id,selected_model_architectures,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_gated):
+def gr_load_check(selected_model_id,selected_model_architectures,selected_model_pipeline_tag,selected_model_transformers,selected_model_size,selected_model_private,selected_model_gated):
     
     global vllm_supported_architectures
     
@@ -505,6 +505,9 @@ def gr_load_check(selected_model_id,selected_model_architectures,selected_model_
         
     if selected_model_transformers != 'True':        
         return f'Selected model has no transformers', gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
+        
+    if selected_model_size == '0':        
+        return f'Selected model has no size', gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
 
     return f'Selected model is supported by vLLM!', gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
 
@@ -623,52 +626,6 @@ def download_from_hf_hub(selected_model_id):
             local_dir=f'/models/{selected_model_id_arr[0]}/{selected_model_id_arr[1]}'
         )
         return f'Saved to {model_path}'
-    except Exception as e:
-        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-        return f'download error: {e}'
-
-
-rx_change_arr = []
-def check_rx_change():
-    try:
-        global rx_change_arr
-        
-        if len(rx_change_arr) > 4:
-            last_value = rx_change_arr[-1]
-            same_value_count = 0
-            for i in range(1,len(rx_change_arr)):
-                if rx_change_arr[i*-1] == last_value:
-                    same_value_count += 1
-                    if same_value_count > 10:
-                        return f'Count > 10 Download finished'
-                else:
-                    return f'Count: {same_value_count} {str(rx_change_arr)}'
-            return f'Count: {same_value_count} {str(rx_change_arr)}'   
-        else:
-            return f'waiting for download ...'     
-    except Exception as e:
-        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-        return f'Error rx_change_arr {str(e)}'
-
-
-prev_bytes_recv = 0
-def get_download_speed():
-    try:
-        global prev_bytes_recv
-        global rx_change_arr
-        
-        print(f'trying to get download speed ...')
-        net_io = psutil.net_io_counters()
-        bytes_recv = net_io.bytes_recv
-        download_speed = bytes_recv - prev_bytes_recv
-        prev_bytes_recv = bytes_recv
-        download_speed_kb = download_speed / 1024
-        download_speed_mbit_s = (download_speed * 8) / (1024 ** 2)      
-        bytes_received_mb = bytes_recv
-        rx_change_arr.append(rx_change_arr)
-        # return f'{download_speed_mbit_s:.2f} MBit/s (total: {bytes_received_mb})'
-        return f'{download_speed} bytes ({download_speed_mbit_s:.2f} MBit/s)'
-        # return f'{download_speed_kb:.2f} KB/s (total: {bytes_received_mb:.2f})'
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
         return f'download error: {e}'
@@ -925,9 +882,58 @@ def predict_with_my_model(*params):
 
 
 
+rx_change_arr = []
+def check_rx_change():
+    try:
+        global rx_change_arr
+        
+        if len(rx_change_arr) > 4:
+            last_value = rx_change_arr[-1]
+            same_value_count = 0
+            for i in range(1,len(rx_change_arr)):
+                if rx_change_arr[i*-1] == last_value:
+                    same_value_count += 1
+                    if same_value_count > 10:
+                        return f'Count > 10 Download finished'
+                else:
+                    return f'Count: {same_value_count} {str(rx_change_arr)}'
+            return f'Count: {same_value_count} {str(rx_change_arr)}'   
+        else:
+            return f'waiting for download ...'     
+    except Exception as e:
+        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        return f'Error rx_change_arr {str(e)}'
+
+
+prev_bytes_recv = 0
+def get_download_speed():
+    try:
+        global prev_bytes_recv
+        global rx_change_arr
+        
+        print(f'trying to get download speed ...')
+        net_io = psutil.net_io_counters()
+        bytes_recv = net_io.bytes_recv
+        download_speed = bytes_recv - prev_bytes_recv
+        prev_bytes_recv = bytes_recv
+        download_speed_kb = download_speed / 1024
+        download_speed_mbit_s = (download_speed * 8) / (1024 ** 2)      
+        bytes_received_mb = bytes_recv
+        rx_change_arr.append(rx_change_arr)
+        # return f'{download_speed_mbit_s:.2f} MBit/s (total: {bytes_received_mb})'
+        return f'{download_speed} bytes ({download_speed_mbit_s:.2f} MBit/s)'
+        # return f'{download_speed_kb:.2f} KB/s (total: {bytes_received_mb:.2f})'
+    except Exception as e:
+        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        return f'download error: {e}'
+
+
+download_info_current_model_bytes_recv = 0    
 download_info_prev_bytes_recv = 0    
 def download_info(req_model_size, progress=gr.Progress()):
+    global download_info_current_model_bytes_recv
     global download_info_prev_bytes_recv
+    download_info_current_model_bytes_recv = 0
     progress(0, desc="Initializing Download ...")
     time.sleep(1)
     progress(0.01, desc="Calculating Download Time ...")
@@ -935,10 +941,12 @@ def download_info(req_model_size, progress=gr.Progress()):
     
     avg_dl_speed_val = 0
     avg_dl_speed = []
-    for i in range(0,3):
+    for i in range(0,4):
         net_io = psutil.net_io_counters()
         bytes_recv = net_io.bytes_recv
         download_speed = bytes_recv - download_info_prev_bytes_recv
+        download_speed_mbit_s = (download_speed * 8) / (1024 ** 2) 
+        download_info_current_model_bytes_recv = download_info_current_model_bytes_recv + bytes_recv
         download_info_prev_bytes_recv = bytes_recv
         avg_dl_speed.append(download_speed)
         avg_dl_speed_val = sum(avg_dl_speed)/len(avg_dl_speed)
@@ -962,9 +970,15 @@ def download_info(req_model_size, progress=gr.Progress()):
     print(f' **************** [download_info] calculating seconds ... {req_model_size}/{avg_dl_speed_val} -> {est_download_time_sec}')
 
 
-    for i in range(0,est_download_time_sec):        
+    for i in range(0,est_download_time_sec):
+        net_io = psutil.net_io_counters()
+        bytes_recv = net_io.bytes_recv
+        download_speed = bytes_recv - download_info_prev_bytes_recv
+        download_speed_mbit_s = (download_speed * 8) / (1024 ** 2)
+        download_info_current_model_bytes_recv = download_info_current_model_bytes_recv + bytes_recv
+        download_info_prev_bytes_recv = bytes_recv
         progress_percent = (i + 1) / est_download_time_sec
-        progress(progress_percent, desc=f"Downloading ... ({int(progress_percent * 100)}%)")
+        progress(progress_percent, desc=f"Downloading ... ({download_info_current_model_bytes_recv}/{req_model_size} {int(progress_percent * 100)}%) ({download_speed_mbit_s:.2f} MBit/s)")
 
         time.sleep(1)
     yield f"Progress: 100%\nFiniiiiiiiish!"
@@ -1122,7 +1136,7 @@ def create_app():
 
         
         
-        model_dropdown.change(get_info, model_dropdown, [selected_model_search_data,selected_model_id,selected_model_architectures,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_downloads,selected_model_container_name]).then(get_additional_info, model_dropdown, [selected_model_hf_data, selected_model_config_data, selected_model_architectures,selected_model_id, selected_model_size, selected_model_gated]).then(lambda: gr.update(visible=True), None, row_model_select).then(lambda: gr.update(visible=True), None, row_model_info).then(lambda: gr.update(visible=True), None, column_model_actions).then(gr_load_check, [selected_model_id,selected_model_architectures,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_gated],[output,btn_dl,vllm_running_engine_arguments_row,vllm_create_engine_arguments_row])
+        model_dropdown.change(get_info, model_dropdown, [selected_model_search_data,selected_model_id,selected_model_architectures,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_downloads,selected_model_container_name]).then(get_additional_info, model_dropdown, [selected_model_hf_data, selected_model_config_data, selected_model_architectures,selected_model_id, selected_model_size, selected_model_gated]).then(lambda: gr.update(visible=True), None, row_model_select).then(lambda: gr.update(visible=True), None, row_model_info).then(lambda: gr.update(visible=True), None, column_model_actions).then(gr_load_check, [selected_model_id,selected_model_architectures,selected_model_pipeline_tag,selected_model_transformers,selected_model_size,selected_model_private,selected_model_gated],[output,btn_dl,vllm_running_engine_arguments_row,vllm_create_engine_arguments_row])
             
 
         vllm_running_engine_arguments_show.click(
