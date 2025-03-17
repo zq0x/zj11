@@ -439,8 +439,12 @@ def gr_load_check(selected_model_id,selected_model_architectures,selected_model_
         
     if selected_model_architectures == '':
         return f'Selected model has no architecture', gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
-                
-    if selected_model_architectures.lower() not in vllm_supported_architectures:
+    
+    
+    print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [gr_load_check] selected_model_architectures.lower() {selected_model_architectures.lower()}')
+    logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [gr_load_check] selected_model_architectures.lower() {selected_model_architectures.lower()}')
+    selected_model_architectures_lower = selected_model_architectures.lower()
+    if selected_model_architectures_lower not in vllm_supported_architectures:
         if selected_model_transformers != 'True':   
             return f'Selected model architecture is not supported by vLLM but transformers are available (you may try to load the model in gradio Interface)', gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
         else:
