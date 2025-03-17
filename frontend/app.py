@@ -1600,7 +1600,7 @@ def create_app():
 
 
 
-        btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, output).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, output).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, output).then(lambda: gr.update(visible=True), None, btn_interface)
+        btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, output).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, output).then(download_info, selected_model_size, download_info_output).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, output).then(lambda: gr.update(visible=True), None, btn_interface)
 
         btn_deploy = gr.Button("Deploy", visible=True)
         btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, output).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=output).then(refresh_container, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, btn_interface)
